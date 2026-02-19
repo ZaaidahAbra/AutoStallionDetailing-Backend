@@ -1,20 +1,16 @@
-const { getConnection } = require('./db');
+const pool = require('./db');
 
 const createRefund = async (refund) => {
-    const conn = await getConnection();
-    const [result] = await conn.execute(
-        'INSERT INTO refunds (userId, bookingId, amount, reason, status) VALUES (?, ?, ?, ?, ?)',
+    const result = await pool.query(
+        'INSERT INTO refunds (userId, bookingId, amount, reason, status) VALUES ($1, $2, $3, $4, $5) RETURNING id',
         [refund.userId, refund.bookingId, refund.amount, refund.reason, refund.status || 'pending']
     );
-    await conn.end();
-    return result.insertId;
+    return result.rows[0].id;
 };
 
 const getRefundsByUser = async (userId) => {
-    const conn = await getConnection();
-    const [rows] = await conn.execute('SELECT * FROM refunds WHERE userId = ?', [userId]);
-    await conn.end();
-    return rows;
+    const result = await pool.query('SELECT * FROM refunds WHERE userId = $1', [userId]);
+    return result.rows;
 };
 
 module.exports = { createRefund, getRefundsByUser };
