@@ -1,15 +1,12 @@
 
 require('dotenv').config();
-console.log('ENV:', process.env.DB_HOST, process.env.DB_USER, process.env.DB_PASS, process.env.DB_NAME);
-const { getConnection } = require('./models/db.js');
+console.log('ENV:', process.env.DATABASE_URL);
+const pool = require('./models/db.js');
 
 (async () => {
   try {
-    const conn = await getConnection();
-    const [rows] = await conn.query('SELECT 1 + 1 AS test');
-    console.log('MySQL connection test successful:', rows);
-    await conn.end();
+    const result = await pool.query('SELECT 1 + 1 AS test');
+    console.log('PostgreSQL connection test successful:', result.rows);
   } catch (err) {
-    console.error('MySQL connection test failed:', err);
-  }
-})();
+    console.error('PostgreSQL connection test failed:', err);
+}})();

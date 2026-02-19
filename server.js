@@ -5,9 +5,9 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
-const mysql = require('mysql2');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const pool = require('./models/db');
 
 // Create Express app
 const app = express();
@@ -27,19 +27,12 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
-// MySQL Connection
-const db = mysql.createConnection({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASS,
-    database: process.env.DB_NAME
-});
-
-db.connect(err => {
+// PostgreSQL Connection Test
+pool.query('SELECT NOW()', (err, result) => {
     if (err) {
         console.error('Database connection failed:', err);
     } else {
-        console.log('Connected to MySQL database');
+        console.log('Connected to PostgreSQL database');
     }
 });
 
