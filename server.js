@@ -9,6 +9,15 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const pool = require('./models/db');
 
+// Stripe setup (safe)
+let stripe;
+if (process.env.STRIPE_KEY) {
+    const Stripe = require('stripe');
+    stripe = new Stripe(process.env.STRIPE_KEY);
+} else {
+    console.warn('⚠️ STRIPE_KEY not set. Stripe routes will not work until you add it.');
+}
+
 // Create Express app
 const app = express();
 
@@ -18,11 +27,10 @@ app.use(cors({
         'http://localhost:5173',
         'http://localhost:8080',
         'http://localhost:8081',
-        'https://mobile-detailing-ecommerce.vercel.app' 
+        'https://mobile-detailing-ecommerce.vercel.app'
     ],
     credentials: true
 }));
-
 
 app.use(express.json());
 app.use(cookieParser());
@@ -56,10 +64,15 @@ app.use('/api/auth', authRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/packages', packageRoutes);
 app.use('/api/contact', contactRoutes);
-app.use('/api/checkout', checkoutRoutes);
-app.use('/api/refunds', refundRoutes);
-app.use('/api/payments', paymentRoutes);
-app.use('/api/stripe', stripeRoutes);
+
+// Only load Stripe/checkout routes if STRIPE_KEY is set
+if (stripe) {
+    app.use('/api/checkout', checkoutRoutes);
+    app.use('/api/payments', paymentRoutes);
+    app.use('/api/stripe', stripeRoutes);
+} else {
+    console.warn('⚠️ Stripe routes are disabled because STRIPE_KEY is missing.');
+}
 
 // Start server
 const PORT = process.env.PORT || 5000;
